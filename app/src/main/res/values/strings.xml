@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">Content Player</string>
+
+    <string name="retry">Retry</string>
+    <string name="empty_list">No results found</string>
+    <string name="empty_list_msg">No results found for %1$s</string>
+    <string name="error_msg">An error occurred, please try again</string>
+    <string name="error_msg_param">An error occurred\n%1$s</string>
+    <string name="error_msg_updating">An error has occurred when trying to update the data</string>
+
+    <string name="clean_db">Clean DataBase</string>
+</resources>
