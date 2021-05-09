@@ -4,13 +4,17 @@ import android.content.Context
 import android.util.Log
 import android.view.View
 import androidx.core.net.toUri
+import com.google.android.exoplayer2.C
 import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.SimpleExoPlayer
 import com.google.android.exoplayer2.source.MediaSource
 import com.google.android.exoplayer2.source.ProgressiveMediaSource
+import com.google.android.exoplayer2.source.dash.DashMediaSource
+import com.google.android.exoplayer2.source.hls.HlsMediaSource
+import com.google.android.exoplayer2.source.smoothstreaming.SsMediaSource
 import com.google.android.exoplayer2.ui.PlayerView
-import com.google.android.exoplayer2.upstream.DataSource
+import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
 import com.google.android.exoplayer2.upstream.DefaultHttpDataSource
 import com.google.android.exoplayer2.util.MimeTypes
 import com.google.android.exoplayer2.util.Util
@@ -21,7 +25,7 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
 
-class AppPlayer(context: Context) {
+class AppPlayer(val context: Context) {
     private val TAG = "AppPlayer"
 
     interface OnProgressListener {
@@ -29,11 +33,10 @@ class AppPlayer(context: Context) {
     }
 
     var player: SimpleExoPlayer = SimpleExoPlayer.Builder(context).build()
-    private var dataSourceFactory: DataSource.Factory = DefaultHttpDataSource.Factory().setUserAgent(
-        Util.getUserAgent(context, context.packageName)
-    )
 
-    var currentPlayerView: PlayerView? = null
+    private var currentPlayerView: PlayerView? = null
+    private var currentMediaItem: HomeFragment.VideoItem? = null
+
     var loadingBar: View? = null
     var onProgressListener: OnProgressListener? = null
     private val semaphoreListener = Semaphore(1)
@@ -81,6 +84,7 @@ class AppPlayer(context: Context) {
     }
 
     fun setTrackAndPlay(playerView: PlayerView, videoItem: HomeFragment.VideoItem, position: Long) {
+        currentMediaItem = videoItem
         currentPlayerView = playerView
 
         if(player.isPlaying) player.stop()
@@ -90,7 +94,7 @@ class AppPlayer(context: Context) {
         playerView.player = player
         // playerView.useController = false
 
-        getMediaSource(videoItem)?.let {
+        getMediaSource()?.let {
             player.setMediaSource(it)
             player.prepare()
             player.seekTo(position)
@@ -98,29 +102,51 @@ class AppPlayer(context: Context) {
         }
     }
 
-    private fun getMediaSource(videoItem: HomeFragment.VideoItem): MediaSource? {
-        return when (videoItem.format) {
-            MimeTypes.APPLICATION_MP4 -> getProgressiveMediaItem(videoItem.url)
-            MimeTypes.APPLICATION_M3U8 -> getHlsMediaItem(videoItem.url)
-            MimeTypes.APPLICATION_MPD -> getDashMediaItem(videoItem.url)
-            else -> null.also { Log.e(TAG, "Unknown media format (${videoItem.format})") }
+    private fun getMediaSource(): MediaSource? {
+        return if(currentMediaItem == null) null
+        else {
+            when (currentMediaItem!!.format) {
+                MimeTypes.VIDEO_MP4,
+                MimeTypes.VIDEO_WEBM -> getProgressiveMediaItem()
+
+                MimeTypes.APPLICATION_M3U8 -> getHlsMediaItem()
+                MimeTypes.APPLICATION_MPD -> getDashMediaItem()
+                MimeTypes.APPLICATION_SS -> getSmoothMediaItem()
+
+                else -> null.also { Log.e(TAG, "Unknown media format (${currentMediaItem!!.format})") }
+            }
         }
     }
 
-    private fun getProgressiveMediaItem(videoUrl: String) = ProgressiveMediaSource.Factory(dataSourceFactory).createMediaSource(
-        MediaItem.Builder()
-            .setUri(videoUrl.toUri())
-            .build()
-    )
+    private fun mediaItem(): MediaItem {
+        val mediaItem = MediaItem.Builder()
+        mediaItem.setUri(currentMediaItem!!.url.toUri())
 
-    private fun getHlsMediaItem(videoUrl: String): MediaSource? {
-        return null
+        if(currentMediaItem!!.drm != null){
+            mediaItem.setDrmUuid(C.WIDEVINE_UUID)
+            mediaItem.setDrmLicenseUri(currentMediaItem!!.drm!!.license)
+        }
+
+        return mediaItem.build()
     }
 
+    private val dataSourceFactory = DefaultHttpDataSource
+            .Factory()
+            .setUserAgent(Util.getUserAgent(context, context.packageName))
 
-    private fun getDashMediaItem(videoUrl: String): MediaSource? {
-        return null
-    }
+    private val defaultDataSourceFactory = DefaultDataSourceFactory(context, dataSourceFactory)
+
+    private fun getProgressiveMediaItem() = ProgressiveMediaSource
+            .Factory(dataSourceFactory).createMediaSource(mediaItem())
+
+    private fun getHlsMediaItem() = HlsMediaSource
+            .Factory(dataSourceFactory).createMediaSource(mediaItem())
+
+    private fun getDashMediaItem() = DashMediaSource
+            .Factory(dataSourceFactory).createMediaSource(mediaItem())
+
+    private fun getSmoothMediaItem() = SsMediaSource
+            .Factory(dataSourceFactory).createMediaSource(mediaItem())
 
     private fun progressListener() {
         CoroutineScope(Dispatchers.IO).launch {

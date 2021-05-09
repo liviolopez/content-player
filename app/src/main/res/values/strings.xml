@@ -9,4 +9,6 @@
     <string name="error_msg_updating">An error has occurred when trying to update the data</string>
 
     <string name="clean_db">Clean DataBase</string>
+    <string name="content_protection">Content Protection - DRM</string>
+    <string name="stream_type">Stream type</string>
 </resources>
