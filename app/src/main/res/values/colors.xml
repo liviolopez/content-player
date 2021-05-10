@@ -15,5 +15,9 @@
     <color name="item_background">#E9E9E9</color>
     <color name="item_text">#404040</color>
 
+    <color name="blue">#0000ff</color>
+    <color name="green">#009000</color>
+    <color name="red">#ff0000</color>
+
     <color name="overlay_semitransparent">#80FFFFFF</color>
 </resources>

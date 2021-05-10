@@ -5,9 +5,10 @@ import androidx.room.PrimaryKey
 
 @Entity(tableName = "item")
 data class Item(
-    @PrimaryKey val id: String,
-    val name: String,
-    val format: String,
+    @PrimaryKey(autoGenerate = true) val id: Int = 0,
     val url: String,
-    val thumbnail: String
+    val format: String,
+
+    val drmUuid: String?,
+    val drmLicense: String?,
 )

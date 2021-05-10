@@ -1,5 +1,6 @@
 package com.liviolopez.contentplayer.di
 
+import android.app.Application
 import com.liviolopez.contentplayer.data.local.AppDataBase
 import com.liviolopez.contentplayer.data.local.AppDataStore
 import com.liviolopez.contentplayer.data.remote.RemoteDataSource
@@ -20,9 +21,10 @@ object RepositoryModule {
     fun provideRepository(
         remoteData: RemoteDataSource,
         localData: AppDataBase,
-        appDataStore: AppDataStore
+        appDataStore: AppDataStore,
+        application: Application
     ): Repository {
-        return RepositoryImpl(remoteData, localData, appDataStore)
+        return RepositoryImpl(remoteData, localData, appDataStore, application)
     }
 
 }

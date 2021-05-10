@@ -2,21 +2,22 @@ package com.liviolopez.contentplayer.data.remote.response
 
 import com.liviolopez.contentplayer.data.local.model.Item
 
+/** TODO()
+ * fetch items from remote source
+ */
 data class ItemDto(
-    val id: String,
-    val name: String,
-    val format: String,
     val url: String,
-    val thumbnail: String
+    val format: String,
+    val drmUuid: String?,
+    val drmLicense: String?,
 )
 
 // Mapper with Kotlin Extension (Better performance in comparison of Kotlin Reflect)
 fun ItemDto.toLocalModel() = Item(
-    id = id,
-    name = name,
-    format = format,
     url = url,
-    thumbnail = thumbnail
+    format = format,
+    drmUuid = drmUuid,
+    drmLicense = drmLicense
 )
 
 // Mapper with Kotlin Reflect (This code was added here as a sample)

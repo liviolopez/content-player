@@ -1,11 +1,10 @@
 package com.liviolopez.contentplayer.repository
 
 import com.liviolopez.contentplayer.data.local.model.Item
-import com.liviolopez.contentplayer.utils.Resource
 import kotlinx.coroutines.flow.Flow
 
 interface Repository {
-    suspend fun initializeCache()
+    suspend fun initializeDb()
 
-    fun fetchItems(): Flow<Resource<List<Item>>>
+    fun filterItems(formats: List<String>, protection: String): Flow<List<Item>>
 }

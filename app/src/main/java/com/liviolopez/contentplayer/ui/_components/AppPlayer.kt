@@ -14,11 +14,9 @@ import com.google.android.exoplayer2.source.dash.DashMediaSource
 import com.google.android.exoplayer2.source.hls.HlsMediaSource
 import com.google.android.exoplayer2.source.smoothstreaming.SsMediaSource
 import com.google.android.exoplayer2.ui.PlayerView
-import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
 import com.google.android.exoplayer2.upstream.DefaultHttpDataSource
-import com.google.android.exoplayer2.util.MimeTypes
 import com.google.android.exoplayer2.util.Util
-import com.liviolopez.contentplayer.ui.home.HomeFragment
+import com.liviolopez.contentplayer.data.local.model.Item
 import com.liviolopez.contentplayer.utils.extensions.setGone
 import com.liviolopez.contentplayer.utils.extensions.visibleIf
 import kotlinx.coroutines.*
@@ -35,7 +33,7 @@ class AppPlayer(val context: Context) {
     var player: SimpleExoPlayer = SimpleExoPlayer.Builder(context).build()
 
     private var currentPlayerView: PlayerView? = null
-    private var currentMediaItem: HomeFragment.VideoItem? = null
+    private var currentMediaItem: Item? = null
 
     var loadingBar: View? = null
     var onProgressListener: OnProgressListener? = null
@@ -83,8 +81,8 @@ class AppPlayer(val context: Context) {
         currentPlayerView = null
     }
 
-    fun setTrackAndPlay(playerView: PlayerView, videoItem: HomeFragment.VideoItem, position: Long) {
-        currentMediaItem = videoItem
+    fun setTrackAndPlay(playerView: PlayerView, item: Item, position: Long) {
+        currentMediaItem = item
         currentPlayerView = playerView
 
         if(player.isPlaying) player.stop()
@@ -105,48 +103,46 @@ class AppPlayer(val context: Context) {
     private fun getMediaSource(): MediaSource? {
         return if(currentMediaItem == null) null
         else {
-            when (currentMediaItem!!.format) {
-                MimeTypes.VIDEO_MP4,
-                MimeTypes.VIDEO_WEBM -> getProgressiveMediaItem()
-
-                MimeTypes.APPLICATION_M3U8 -> getHlsMediaItem()
-                MimeTypes.APPLICATION_MPD -> getDashMediaItem()
-                MimeTypes.APPLICATION_SS -> getSmoothMediaItem()
+            when (StreamType.from(currentMediaItem!!.format)) {
+                StreamType.PROGRESSIVE -> getProgressiveMediaSource()
+                StreamType.HLS -> getHlsMediaSource()
+                StreamType.DASH -> getDashMediaSource()
+                StreamType.SMOOTH -> getSmoothMediaSource()
 
                 else -> null.also { Log.e(TAG, "Unknown media format (${currentMediaItem!!.format})") }
             }
         }
     }
 
+    private val dataSourceFactory = DefaultHttpDataSource
+        .Factory()
+        .setUserAgent(Util.getUserAgent(context, context.packageName))
+
+    // ------ Stream Type Factories -------
+    private fun getProgressiveMediaSource() = ProgressiveMediaSource
+        .Factory(dataSourceFactory).createMediaSource(mediaItem())
+
+    private fun getHlsMediaSource() = HlsMediaSource
+        .Factory(dataSourceFactory).createMediaSource(mediaItem())
+
+    private fun getDashMediaSource() = DashMediaSource
+        .Factory(dataSourceFactory).createMediaSource(mediaItem())
+
+    private fun getSmoothMediaSource() = SsMediaSource
+        .Factory(dataSourceFactory).createMediaSource(mediaItem())
+    // ------------------------------------
+
     private fun mediaItem(): MediaItem {
         val mediaItem = MediaItem.Builder()
         mediaItem.setUri(currentMediaItem!!.url.toUri())
 
-        if(currentMediaItem!!.drm != null){
-            mediaItem.setDrmUuid(C.WIDEVINE_UUID)
-            mediaItem.setDrmLicenseUri(currentMediaItem!!.drm!!.license)
+        if(!currentMediaItem?.drmUuid.isNullOrBlank()){
+            mediaItem.setDrmUuid(DrmType.from(currentMediaItem!!.drmUuid!!)?.uuid)
+            mediaItem.setDrmLicenseUri(currentMediaItem!!.drmLicense)
         }
 
         return mediaItem.build()
     }
-
-    private val dataSourceFactory = DefaultHttpDataSource
-            .Factory()
-            .setUserAgent(Util.getUserAgent(context, context.packageName))
-
-    private val defaultDataSourceFactory = DefaultDataSourceFactory(context, dataSourceFactory)
-
-    private fun getProgressiveMediaItem() = ProgressiveMediaSource
-            .Factory(dataSourceFactory).createMediaSource(mediaItem())
-
-    private fun getHlsMediaItem() = HlsMediaSource
-            .Factory(dataSourceFactory).createMediaSource(mediaItem())
-
-    private fun getDashMediaItem() = DashMediaSource
-            .Factory(dataSourceFactory).createMediaSource(mediaItem())
-
-    private fun getSmoothMediaItem() = SsMediaSource
-            .Factory(dataSourceFactory).createMediaSource(mediaItem())
 
     private fun progressListener() {
         CoroutineScope(Dispatchers.IO).launch {
@@ -167,5 +163,45 @@ class AppPlayer(val context: Context) {
                 }
             }
         }
+    }
+
+    enum class StreamType {
+        PROGRESSIVE, HLS, DASH, SMOOTH;
+
+        companion object {
+            fun from(format: String) = values().firstOrNull {
+                    it.formats.contains(format)
+                }
+        }
+
+        val detailsName get() = when(this){
+                PROGRESSIVE -> "Progressive"
+                HLS -> "HLS: HTTP Live Streaming"
+                DASH -> "DASH: Dynamic Adaptive Streaming over HTTP"
+                SMOOTH -> "Smooth Streaming"
+            }
+
+        val formats get() = when(this){
+                PROGRESSIVE -> listOf("mp4", "webm")
+                HLS -> listOf("m3u8")
+                DASH -> listOf("mpd")
+                SMOOTH -> listOf("smooth")
+            }
+    }
+
+    enum class DrmType {
+        PlayReady, WideVine, ClearKey;
+
+        companion object {
+            fun from(format: String) = values().firstOrNull {
+                    it.name.lowercase() == format.lowercase()
+                }
+        }
+
+        val uuid get() = when(this){
+                PlayReady -> C.PLAYREADY_UUID
+                WideVine -> C.WIDEVINE_UUID
+                ClearKey -> C.CLEARKEY_UUID
+            }
     }
 }

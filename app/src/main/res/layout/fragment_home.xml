@@ -39,7 +39,25 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/vv_item_video" />
 
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rv_media_items"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        app:layoutManager="LinearLayoutManager"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/divisor1"
+        app:layout_constraintBottom_toTopOf="@+id/divisor2"
+        tools:listitem="@layout/item_video" />
 
+    <include
+        android:id="@+id/standby_view"
+        layout="@layout/view_overlay_standby"
+        app:layout_constraintBottom_toBottomOf="@+id/rv_media_items"
+        app:layout_constraintEnd_toEndOf="@+id/rv_media_items"
+        app:layout_constraintStart_toStartOf="@+id/rv_media_items"
+        app:layout_constraintTop_toTopOf="@+id/rv_media_items" />
 
     <View
         android:id="@+id/divisor2"
