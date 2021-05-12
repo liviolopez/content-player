@@ -38,7 +38,7 @@ fun <T> TextInputLayout.setOptions(
     val context = this.context
     val _topValue = topValue?.let { listOf(it) } ?: emptyList()
 
-    val adapter = ArrayAdapter(context, R.layout.text_item, _topValue + list.map { show(it) })
+    val adapter = ArrayAdapter(context, android.R.layout.simple_spinner_dropdown_item, _topValue + list.map { show(it) })
     (this.editText as? AutoCompleteTextView)?.apply {
         setAdapter(adapter)
         list.firstOrNull { currentValIf(it) }?.let {

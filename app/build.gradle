@@ -21,7 +21,7 @@ android {
 
     defaultConfig {
         applicationId "com.liviolopez.contentplayer"
-        minSdkVersion 23
+        minSdkVersion 22
         targetSdkVersion 30
         versionCode 1
         versionName "1.0"
@@ -40,6 +40,12 @@ android {
             minifyEnabled false
             debuggable true
         }
+    }
+
+    flavorDimensions 'platform'
+    productFlavors {
+        mobile { dimension 'platform' }
+        tv { dimension 'platform' }
     }
 
     compileOptions {
@@ -100,6 +106,10 @@ dependencies {
 
     def datastore_version = "1.0.0-beta01"
     implementation "androidx.datastore:datastore-preferences:$datastore_version"
+
+    // TV dependencies
+    def leanback_version = "1.1.0-rc01"
+    tvImplementation "androidx.leanback:leanback:$leanback_version"
 
     // ---------------------------------------------
     // --------------------TEST --------------------

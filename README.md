@@ -35,7 +35,7 @@ CDM: Content Decryption Module
 ------------------------------
 ```
 TODO:  
-- closed captions and custom styles
+- closed captions and custom styles (SRT, TTML, WebVTT)
 - media playlist
 - download and playback from local storage
 - cache 
@@ -43,6 +43,8 @@ TODO:
 - analytics
 - DRM clearKey
 - audio
+- Tv variant (Android, Fire) - ViewBinding focus delegation
+- Chromecast
 
 Brightcove Video Cloud Platform
 FreeWheel Monetization Rights Management® (MRM)

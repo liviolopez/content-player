@@ -1,9 +1,11 @@
 package com.liviolopez.contentplayer.ui.home
 
 import android.view.ViewGroup
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.viewbinding.ViewBinding
+import com.liviolopez.contentplayer.R
 import com.liviolopez.contentplayer.data.local.model.Item
 import com.liviolopez.contentplayer.databinding.ItemAudioBinding
 import com.liviolopez.contentplayer.databinding.ItemVideoBinding
@@ -58,6 +60,14 @@ class MediaItemAdapter(
 
             root.setOnClickListener {
                 this@MediaItemAdapter.clickListener(item)
+            }
+
+            /** TODO() Tv - ViewBinding focus delegation - leanback **/
+            root.setOnFocusChangeListener { v, hasFocus ->
+                v.background = ContextCompat.getDrawable(
+                    root.context,
+                    if (hasFocus) R.drawable.border_focus else R.drawable.border_default
+                )
             }
         }
     }
