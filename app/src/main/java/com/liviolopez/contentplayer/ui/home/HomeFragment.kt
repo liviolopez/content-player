@@ -10,6 +10,7 @@ import com.liviolopez.contentplayer.R
 import com.liviolopez.contentplayer.data.local.model.Item
 import com.liviolopez.contentplayer.databinding.FragmentHomeBinding
 import com.liviolopez.contentplayer.ui._components.*
+import com.liviolopez.contentplayer.utils.DeviceInfo
 import com.liviolopez.contentplayer.utils.Resource
 import com.liviolopez.contentplayer.utils.extensions.setGone
 import com.liviolopez.contentplayer.utils.extensions.setOptions
@@ -17,12 +18,16 @@ import com.liviolopez.contentplayer.utils.extensions.setVisible
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class HomeFragment : Fragment(R.layout.fragment_home), AppPlayer.OnProgressListener {
     private val TAG = "HomeFragment"
 
     private val viewModel: HomeViewModel by activityViewModels()
+
+    @Inject
+    lateinit var deviceInfo: DeviceInfo
 
     private lateinit var binding: FragmentHomeBinding
 
@@ -43,19 +48,31 @@ class HomeFragment : Fragment(R.layout.fragment_home), AppPlayer.OnProgressListe
 
     private fun setupFilters(){
         val streamTypes = AppPlayer.StreamType.values().toList()
-        binding.dmStreamType.setOptions(streamTypes,
-            topValue = "All",
-            show = { it.detailsName },
-            onClick = { // return null when clicked "topValue"
-                viewModel.filterFormat.value = it?.formats ?: emptyList()
-            }
-        )
+        binding.dmStreamType.apply {
+            setOptions(streamTypes,
+                topValue = "All",
+                show = { it.detailsName },
+                onClick = { // return null when clicked "topValue"
+                    viewModel.filterFormat.value = it?.formats ?: emptyList()
+                }
+            )
+
+            deviceInfo.ifItsTv { setOnClickListener {
+                binding.dmStreamTypeValue.apply { requestFocus(); showDropDown() }
+            }}
+        }
 
         val drmTypes = listOf("Anyone", "Without") + AppPlayer.DrmType.values().map { it.name }
-        binding.dmContentProtection.setOptions(drmTypes,
-            show = { it },
-            onClick = { viewModel.filterProtection.value = it!! }
-        )
+        binding.dmContentProtection.apply {
+            setOptions(drmTypes,
+                show = { it },
+                onClick = { viewModel.filterProtection.value = it!! }
+            )
+
+            deviceInfo.ifItsTv { setOnClickListener {
+                binding.dmContentProtectionValue.apply { requestFocus(); showDropDown() }
+            }}
+        }
     }
 
     private fun setupMediaItemsAdapter() {
