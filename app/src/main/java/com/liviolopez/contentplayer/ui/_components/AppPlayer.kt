@@ -12,6 +12,7 @@ import com.google.android.exoplayer2.source.MediaSource
 import com.google.android.exoplayer2.source.ProgressiveMediaSource
 import com.google.android.exoplayer2.source.dash.DashMediaSource
 import com.google.android.exoplayer2.source.hls.HlsMediaSource
+import com.google.android.exoplayer2.source.rtsp.RtspMediaSource
 import com.google.android.exoplayer2.source.smoothstreaming.SsMediaSource
 import com.google.android.exoplayer2.ui.PlayerView
 import com.google.android.exoplayer2.upstream.DefaultHttpDataSource
@@ -108,6 +109,7 @@ class AppPlayer(val context: Context) {
                 StreamType.HLS -> getHlsMediaSource()
                 StreamType.DASH -> getDashMediaSource()
                 StreamType.SMOOTH -> getSmoothMediaSource()
+                StreamType.RTSP -> getRtspMediaSource()
 
                 else -> null.also { Log.e(TAG, "Unknown media format (${currentMediaItem!!.format})") }
             }
@@ -130,6 +132,9 @@ class AppPlayer(val context: Context) {
 
     private fun getSmoothMediaSource() = SsMediaSource
         .Factory(dataSourceFactory).createMediaSource(mediaItem())
+
+    private fun getRtspMediaSource() = RtspMediaSource
+        .Factory().createMediaSource(mediaItem())
     // ------------------------------------
 
     private fun mediaItem(): MediaItem {
@@ -166,7 +171,7 @@ class AppPlayer(val context: Context) {
     }
 
     enum class StreamType {
-        PROGRESSIVE, HLS, DASH, SMOOTH;
+        PROGRESSIVE, HLS, DASH, SMOOTH, RTSP;
 
         companion object {
             fun from(format: String) = values().firstOrNull {
@@ -179,6 +184,7 @@ class AppPlayer(val context: Context) {
                 HLS -> "HLS: HTTP Live Streaming"
                 DASH -> "DASH: Dynamic Adaptive Streaming over HTTP"
                 SMOOTH -> "Smooth Streaming"
+                RTSP -> "Real Time Streaming Protocol"
             }
 
         val formats get() = when(this){
@@ -186,6 +192,7 @@ class AppPlayer(val context: Context) {
                 HLS -> listOf("m3u8")
                 DASH -> listOf("mpd")
                 SMOOTH -> listOf("smooth")
+                RTSP -> listOf("rtsp")
             }
     }
 

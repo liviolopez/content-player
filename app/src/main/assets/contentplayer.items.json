@@ -1,5 +1,13 @@
 [
   {
+    "url": "rtsp://10.0.0.15:8554/1",
+    "format": "rtsp"
+  },
+  {
+    "url": "rtsp://wowzaec2demo.streamlock.net/vod/mp4:BigBuckBunny_115k.mov",
+    "format": "rtsp"
+  },
+  {
     "url": "https://bitmovin-a.akamaihd.net/content/MI201109210084_1/MI201109210084_mpeg-4_hd_high_1080p25_10mbits.mp4",
     "format": "mp4"
   },
